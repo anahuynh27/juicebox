@@ -1,23 +1,68 @@
+const { Console } = require('console');
+const { client, getAllUsers } = require('./index');
 
-// grab our client with destructuring from the export in index.js
-const { client } = require('./index');
-
-async function testDB() {
+async function dropTables() {
   try {
-    // connect the client to the database, finally
-    client.connect();
+    console.log('Starting to drop tables (and some beats)...');
 
-    // queries are promises, so we can await them
-      const { rows } = await client.query(`SELECT * FROM users;`);
+    await client.query(`
+      DROP TABLES IF EXISTS users;
+    `);
 
-    // for now, logging is a fine way to see what's up
-      console.log(rows);
+    console.log('Finished droping tables');
   } catch (error) {
-    console.error(error);
-  } finally {
-    // it's important to close out the client connection
-    client.end();
+    console.error('Error dropping tables :(');
+    throw error; 
   }
 }
 
-testDB();
+async function createTables() {
+  try {
+    console.log('Starting to build tables...');
+
+    await client.query(`
+    CREATE TABLE users (
+      id SERIAL PRIMARY KEY,
+      username varchar(225) UNIQUE NOT NULL,
+      password varchar(225) NOT NULL
+    )
+    `);
+
+    console.log('Finished building tables')
+  } catch (error) {
+    console.error("Error building tables :(");
+    throw error;
+  }
+}
+
+async function rebuildDB() {
+  try {
+    client.connect();
+
+    await dropTables();
+    await createTables();
+  } catch (error) {
+    console.error(error);
+  } 
+}
+
+
+async function testDB() {
+  try {
+    console.log("Starting to test database...")
+    
+    // queries are promises, so we can await them
+    const users = await getAllUsers();
+    console.log("getAllUsers:", users);
+    
+    console.log('finshed DB tests!');
+  } catch (error) {
+    console.error('Error testing database :(');
+    throw error
+  } 
+}
+
+rebuildDB()
+  .then(testDB())
+  .catch(console.error)
+  .finally(() => client.end());
