@@ -1,5 +1,6 @@
 const { Console } = require("console");
-const { client, getAllUsers, createUser } = require("./index");
+const { resourceLimits } = require("worker_threads");
+const { client, getAllUsers, createUser, updateUser } = require("./index");
 
 async function dropTables() {
   try {
@@ -72,6 +73,35 @@ async function createInitialUsers() {
   }
 }
 
+// async function updateUsers(id, fields = {}) {
+//   console.log("Viewing Update Users");
+//   const setString = Object.keys(fields)
+//     .map((key, index) => `"${key}"=$${index + 1}`)
+//     .join(", ");
+
+//   if (setString.length === 0) {
+//     return;
+//   }
+
+//   try {
+//     const result = await client.query(
+//       `
+//     UPDATE users
+//     SET "${setString}"
+//     WHERE is=${id}
+//     RETURNING *;
+//     `,
+//       Object.values(fields)
+//     );
+
+//     console.log("Finished updating user!!!");
+//     return result;
+//   } catch (error) {
+//     console.log("issue updating user");
+//     throw error;
+//   }
+// }
+
 async function rebuildDB() {
   try {
     client.connect();
@@ -79,23 +109,54 @@ async function rebuildDB() {
     await dropTables();
     await createTables();
     await createInitialUsers();
+    await updateUser();
   } catch (error) {
     console.error(error);
     throw error;
   }
 }
 
+// async function testDB() {
+//   try {
+//     console.log("Starting to test database...");
+
+//     // queries are promises, so we can await them
+//     console.log("calling getAllUsers");
+//     const users = await getAllUsers();
+//     console.log("getAllUsers:", users);
+
+//     console.log("Calling updateUser on users[0]");
+//     const updateUserResult = await updateUser(users[0].id, {
+//       name: "Newname Sogood",
+//       location: "Lesterville, KY",
+//     });
+//     console.log("Result:", updateUserResult);
+
+//     console.log("Finshed DB tests!");
+//   } catch (error) {
+//     console.error("Error testing database :(");
+//     throw error;
+//   }
+// }
+
 async function testDB() {
   try {
     console.log("Starting to test database...");
 
-    // queries are promises, so we can await them
+    console.log("Calling getAllUsers")
     const users = await getAllUsers();
-    console.log("getAllUsers:", users);
+    console.log("Result:", users);
 
-    console.log("Finshed DB tests!");
+    console.log("Calling updateUser on users[0]")
+    const updateUserResult = await updateUser(users[0].id, {
+      name: "Newname Sogood",
+      location: "Lesterville, KY"
+    });
+    console.log("Result:", updateUserResult);
+
+    console.log("Finished database tests!");
   } catch (error) {
-    console.error("Error testing database :(");
+    console.error("Error testing database!");
     throw error;
   }
 }
