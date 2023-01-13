@@ -1,12 +1,21 @@
 const { Console } = require("console");
 const { resourceLimits } = require("worker_threads");
-const { client, getAllUsers, createUser, updateUser } = require("./index");
+const { client,
+  getAllUsers,
+  createUser,
+  updateUser,
+  createPost, 
+  getAllPosts,
+  updatePost,
+  getPostsByUser,
+  } = require("./index");
 
 async function dropTables() {
   try {
     console.log("Starting to drop tables (and some beats)...");
 
     await client.query(`
+      DROP TABLE IF EXISTS posts;
       DROP TABLE IF EXISTS users;
     `);
 
@@ -24,8 +33,8 @@ async function createTables() {
     await client.query(`
     CREATE TABLE users (
       id SERIAL PRIMARY KEY,
-      username varchar(225) UNIQUE NOT NULL,
-      password varchar(225) NOT NULL,
+      username VARCHAR(225) UNIQUE NOT NULL,
+      password VARCHAR(225) NOT NULL,
       name VARCHAR(255) NOT NULL, 
       location VARCHAR(255) NOT NULL, 
       active BOOLEAN DEFAULT true
@@ -35,6 +44,27 @@ async function createTables() {
     console.log("Finished building tables");
   } catch (error) {
     console.error("Error building tables :(");
+    throw error;
+  }
+}
+
+async function posts() {
+  try {
+    console.log("Creating Posts...");
+
+    await client.query(`
+    CREATE TABLE posts (
+      id SERIAL PRIMARY KEY,
+      "authorId" INTEGER REFERENCES users(id) NOT NULL,
+      title VARCHAR(225) NOT NULL,
+      CONTENT VARCHAR(255) NOT NULL, 
+      active BOOLEAN DEFAULT true
+    )
+    `);
+
+    console.log("Finished building Posts");
+  } catch (error) {
+    console.error("Error building Posts :(");
     throw error;
   }
 }
@@ -73,34 +103,31 @@ async function createInitialUsers() {
   }
 }
 
-// async function updateUsers(id, fields = {}) {
-//   console.log("Viewing Update Users");
-//   const setString = Object.keys(fields)
-//     .map((key, index) => `"${key}"=$${index + 1}`)
-//     .join(", ");
+async function createInitialPosts() {
+  try {
+    const [albert, sandra, glamgal] = await getAllUsers();
 
-//   if (setString.length === 0) {
-//     return;
-//   }
+    await createPost({
+      authorId: albert.id,
+      title: "First Post",
+      content: "This is my first post. I hope I love writing blogs as much as I love writing them."
+    });
+    await createPost({
+      authorId: sandra.id,
+      title: "Second Post",
+      content: "This is my second post. I hope I can finish this project."
+    });
+    await createPost({
+      authorId: glamgal.id,
+      title: "Third Post",
+      content: "This is my Third post. I wonder if I will get a web development job after this program..."
+    });
 
-//   try {
-//     const result = await client.query(
-//       `
-//     UPDATE users
-//     SET "${setString}"
-//     WHERE is=${id}
-//     RETURNING *;
-//     `,
-//       Object.values(fields)
-//     );
-
-//     console.log("Finished updating user!!!");
-//     return result;
-//   } catch (error) {
-//     console.log("issue updating user");
-//     throw error;
-//   }
-// }
+  } catch (error) {
+    console.error('Issue creating inital post')
+    throw error;
+  }
+}
 
 async function rebuildDB() {
   try {
@@ -108,36 +135,15 @@ async function rebuildDB() {
 
     await dropTables();
     await createTables();
+    await posts();
     await createInitialUsers();
+    await createInitialPosts();
     await updateUser();
   } catch (error) {
     console.error(error);
     throw error;
   }
 }
-
-// async function testDB() {
-//   try {
-//     console.log("Starting to test database...");
-
-//     // queries are promises, so we can await them
-//     console.log("calling getAllUsers");
-//     const users = await getAllUsers();
-//     console.log("getAllUsers:", users);
-
-//     console.log("Calling updateUser on users[0]");
-//     const updateUserResult = await updateUser(users[0].id, {
-//       name: "Newname Sogood",
-//       location: "Lesterville, KY",
-//     });
-//     console.log("Result:", updateUserResult);
-
-//     console.log("Finshed DB tests!");
-//   } catch (error) {
-//     console.error("Error testing database :(");
-//     throw error;
-//   }
-// }
 
 async function testDB() {
   try {
@@ -153,6 +159,21 @@ async function testDB() {
       location: "Lesterville, KY"
     });
     console.log("Result:", updateUserResult);
+
+    console.log("Calling getAllPosts");
+    const posts = await getAllPosts();
+    console.log("Result:", posts);
+
+    console.log("Calling updatePost on posts[0]");
+    const updatePostResult = await updatePost(posts[0].id, {
+      title: "New Title",
+      content: "Updated Content"
+    });
+    console.log("Result:", updatePostResult);
+
+    console.log("Calling getUserById with 1");
+    const albert = await getUserById(1);
+    console.log("Result:", albert);
 
     console.log("Finished database tests!");
   } catch (error) {
