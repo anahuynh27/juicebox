@@ -1,5 +1,3 @@
-const { Console } = require("console");
-const { resourceLimits } = require("worker_threads");
 const { client,
   getAllUsers,
   createUser,
@@ -8,6 +6,7 @@ const { client,
   getAllPosts,
   updatePost,
   getPostsByUser,
+  getUserById
   } = require("./index");
 
 async function dropTables() {
@@ -139,6 +138,7 @@ async function rebuildDB() {
     await createInitialUsers();
     await createInitialPosts();
     await updateUser();
+    await updatePost();
   } catch (error) {
     console.error(error);
     throw error;
@@ -165,6 +165,7 @@ async function testDB() {
     console.log("Result:", posts);
 
     console.log("Calling updatePost on posts[0]");
+
     const updatePostResult = await updatePost(posts[0].id, {
       title: "New Title",
       content: "Updated Content"

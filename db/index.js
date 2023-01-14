@@ -14,7 +14,7 @@ async function createUser({ username, password, name, location }) {
     [username, password, name, location]
   );
 
-  return { rows: [ user ]};
+  return user;
 }
 
 async function createPost({
@@ -41,10 +41,10 @@ async function getAllUsers() {
 }
 
 async function getAllPosts() {
-  const result = await client.query(
-    'SELECT "authorId", title, content FROM posts;'
+  const { rows } = await client.query(
+    'SELECT id, "authorId", title, content FROM posts;'
   );
-  return result;
+  return rows ;
 }
 
 async function updateUser(id, fields = {}) {
@@ -71,27 +71,29 @@ try {
 }
 }
 
-async function updatePost(id, {
-  title,
-  content,
-  active
-}) {
-  console.log("Viewing Update Posts");
-  const setString = Object.keys(id).map(
-    (key, index) => `"${key}"=$${index + 1}`
+async function updatePost(id, fields = {}) {
+  console.log(fields[0])
+  console.log("Viewing Update Posts",  fields, id);
+  const setString = Object.keys(fields).map(
+    (key, index) => `"${ key }"=$${ index + 1 }`
   ).join(', ');
 
   if (setString.length === 0) {
-    return; 
+    console.log("in if statement of Update Post")
+    return;
   }
 
   try {
+    console.log("in update post try")
     const { rows: [ post ] } = await client.query(`
     UPDATE posts
     SET ${setString}
     WHERE id=${id}
     RETURNING *;
-    `, Object.values(id));
+    `, Object.values(fields));
+
+    console.log("end of try of update post")
+    return post;
   } catch (error) {
     console.error("Issues updating Post")
     throw error;
@@ -111,15 +113,28 @@ async function getPostsByUser(userId) {
   }
 }
 
+async function getUserById(authorId) {
+  try {
+    const { rows } = await client.query(`
+      SELECT * FROM users
+      WHERE id=${ authorId };
+    `);
+
+    return rows;
+  } catch (error) {
+    throw error;
+  }
+}
 
 
 module.exports = {
   client,
   getAllUsers,
-  createUser,
   updateUser,
+  createUser,
   createPost, 
   getAllPosts,
   updatePost,
   getPostsByUser,
+  getUserById,
 };
