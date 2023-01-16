@@ -205,6 +205,11 @@ async function testDB() {
     const albert = await getUserById(1);
     console.log("Result:", albert);
 
+    console.log("Calling getPostsByUser with 2");
+    const sandra = await getPostsByUser(2);
+    console.log("Result:", sandra);
+    console.log("finished caling getPostsByUser")
+
 
     console.log("Finished database tests!");
   } catch (error) {
