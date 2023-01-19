@@ -3,6 +3,9 @@ const { Client } = require("pg"); // imports the pg module
 // supply the db name and location of the database
 const client = new Client("postgres://localhost:5432/juicebox-dev");
 
+
+
+//below are juicebox part 1
 async function createUser({ username, password, name, location }) {
   const {
     rows: [user],
@@ -96,7 +99,7 @@ async function updateUser(id, fields = {}) {
   }
 }
 
-async function updatePost(postId, id, fields = {}) {
+async function updatePost(postId, fields = {}) {
   
   const { tags } = fields;
   delete fields.tags;
@@ -137,7 +140,7 @@ async function updatePost(postId, id, fields = {}) {
 
     await addTagsToPost(postId, tagList);
 
-    return getPostById(postId);
+    return await getPostById(postId);
   } catch (error) {
     console.error("Issues updating Post");
     throw error;
@@ -207,6 +210,20 @@ async function createTags(tagList) {
   }
 }
 
+async function getAllTags() {
+
+  try {
+    const { rows: tag } = await client.query(`
+      SELECT *
+      FROM tags;
+    `)
+
+    return tag;
+  } catch (error) {
+    console.log("err in get all tags")
+    throw error;
+  }
+}
 async function createPostTag(postId, tagId) {
   try {
     await client.query(`
@@ -289,6 +306,20 @@ async function getPostsByTagName(tagName) {
   }
 } 
 
+async function getUserByUsername(username) {
+  try {
+    const { rows: [user] } = await client.query(`
+      SELECT *
+      FROM users
+      WHERE username=$1;
+    `, [username]);
+
+    return user;
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   client,
   getAllUsers,
@@ -301,5 +332,9 @@ module.exports = {
   getPostsByUser,
   getUserById,
   addTagsToPost,
-  getPostsByTagName
+  getPostsByTagName,
+  getAllTags,
+  getUserByUsername
 };
+
+
