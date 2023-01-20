@@ -4,6 +4,8 @@ const usersRouter = express.Router();
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = process.env;
 
+const { createUser } = require("../db");
+
 
 const { getAllUsers, getUserByUsername } = require("../db");
 
@@ -28,11 +30,12 @@ usersRouter.post('/login', async (req, res, next) => {
 
   try {
     const user = await getUserByUsername(username);
-    const token = jwt.sign({user})
-
+    
     if (user && user.password == password) {
       // create token & return to user
-      res.send({ message: "you're logged in!" });
+      const token = jwt.sign({username, id:user.id}, process.env.JWT_SECRET )
+
+      res.send({ message: "you're logged in!", token });
     } else {
       next({ 
         name: 'IncorrectCredentialsError', 
@@ -40,9 +43,45 @@ usersRouter.post('/login', async (req, res, next) => {
       });
     }
   } catch(error) {
-    console.log(error);
+    console.log("error in users.js userRouter.Post", error);
     next(error);
   }
+});
+
+usersRouter.post('/register', async (req, res, next) => {
+  const { username, password, name, location } = req.body;
+
+  try {
+    const _user = await getUserByUsername(username);
+
+    if (_user) {
+      next({
+        name: 'UserExistsError',
+        message: 'A user by that username already exists'
+      });
+    }
+
+    const user = await createUser({
+      username,
+      password,
+      name,
+      location,
+    });
+
+    const token = jwt.sign({ 
+      id: user.id, 
+      username
+    }, process.env.JWT_SECRET, {
+      expiresIn: '1w'
+    });
+
+    res.send({ 
+      message: "thank you for signing up",
+      token 
+    });
+  } catch ({ name, message }) {
+    next({ name, message })
+  } 
 });
 
 

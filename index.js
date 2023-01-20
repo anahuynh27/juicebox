@@ -17,8 +17,16 @@ server.use((req, res, next) => {
   next();
 });
 
+
 const apiRouter = require("./api");
 server.use("/api", apiRouter);
+
+apiRouter.use((error, req, res, next) => {
+  res.send({
+    name: error.name,
+    message: error.message
+  });
+});
 
 const { client } = require("./db");
 client.connect();
