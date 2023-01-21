@@ -8,10 +8,7 @@ const {
   updatePost,
   getPostsByUser,
   getUserById,
-  // createTags,
-  // addTagsToPost,
   getPostsByTagName,
-  getUserByUsername
 } = require("./index");
 
 async function dropTables() {
@@ -118,20 +115,20 @@ async function createInitialPosts() {
       title: "First Post",
       content:
         "This is my first post. I hope I love writing blogs as much as I love writing them.",
-      tags: ["#happy", "#youcandoanything"]
+      tags: ["#happy", "#youcandoanything", "#coolcatAl"]
     });
     await createPost({
       authorId: sandra.id,
       title: "Second Post",
       content: "This is my second post. I hope I can finish this project.",
-      tags: ["#happy", "#worst-day-ever"]
+      tags: ["#happy", "#worst-day-ever", "#sandraiscool"]
     });
     await createPost({
       authorId: glamgal.id,
       title: "Third Post",
       content:
         "This is my Third post. I wonder if I will get a web development job after this program...",
-      tags: ["#happy", "#youcandoanything", "#canmandoeverything"]
+      tags: ["#happy", "#youcandoanything", "#canmandoeverything", "glamorous"]
     });
   } catch (error) {
     console.error("Issue creating inital post");
@@ -164,7 +161,6 @@ async function createInitialPosts() {
 //   }
 // }
 
-//do not add functions below this line
 
 async function rebuildDB() {
   try {
@@ -175,7 +171,7 @@ async function rebuildDB() {
     await createInitialUsers();
     await createInitialPosts();
   } catch (error) {
-    console.error("error in rebuildDB function", error);
+    console.error("error in rebuildDB function");
     throw error;
   }
 }

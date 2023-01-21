@@ -1,5 +1,3 @@
-//# not used in this workshop, but we initialize it for the express portionconst apiRouter = require('./api');
-
 const PORT = 3000;
 const express = require("express");
 const server = express();
