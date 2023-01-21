@@ -26,11 +26,9 @@ async function createPost({ authorId, title, content, tags = [] }) {
   try {
     const { rows: [post] } = await client.query(
       `INSERT INTO posts("authorId", title, content)
-    VALUES($1, $2, $3)
-    RETURNING *;
-    `,
-      [authorId, title, content]
-    );
+      VALUES($1, $2, $3)
+      RETURNING *;
+      `, [authorId, title, content]);
     
     const tagList = await createTags(tags);
 
@@ -168,12 +166,12 @@ async function getPostsByUser(userId) {
 
 async function getUserById(authorId) {
   try {
-    const { rows } = await client.query(`
+    const result = await client.query(`
       SELECT * FROM users
       WHERE id=${authorId};
     `);
 
-    return rows;
+    return result.rows[0];
   } catch (error) {
     throw error;
   }
@@ -334,7 +332,8 @@ module.exports = {
   addTagsToPost,
   getPostsByTagName,
   getAllTags,
-  getUserByUsername
+  getUserByUsername,
+  getPostById
 };
 
 
